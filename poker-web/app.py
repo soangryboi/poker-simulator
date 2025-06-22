@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
+import logging
+import sys
 from exact_probability import (
     exact_river_probability, exact_turn_probability, exact_flop_probability,
     exact_partial_community_probability, exact_preflop_probability,
@@ -11,6 +13,10 @@ from exact_probability import (
 from poker import Card
 import re
 import time
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -36,15 +42,35 @@ def parse_hand(hand_str):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error in index route: {e}")
+        return f"Error: {str(e)}", 500
 
 @app.route('/calculator')
 def calculator():
-    return render_template('poker_calculator.html')
+    try:
+        return render_template('poker_calculator.html')
+    except Exception as e:
+        logger.error(f"Error in calculator route: {e}")
+        return f"Error: {str(e)}", 500
 
 @app.route('/calculate', methods=['POST'])
 def calculate_probability():
     try:
+        # 필요한 모듈들을 여기서 import (에러 발생 시 더 명확한 메시지)
+        from exact_probability import (
+            exact_river_probability, exact_turn_probability, exact_flop_probability,
+            exact_partial_community_probability, exact_preflop_probability,
+            exact_multiplayer_river, exact_multiplayer_turn, exact_multiplayer_partial_community,
+            exact_multiplayer_preflop,
+            exact_multiplayer_river_individual, exact_multiplayer_turn_individual,
+            exact_multiplayer_flop_individual, exact_multiplayer_preflop_individual
+        )
+        from poker import Card
+        import time
+        
         start_time = time.time()
         
         data = request.json
@@ -112,7 +138,14 @@ def calculate_probability():
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        logger.error(f"Error in calculate route: {e}")
+        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"Exception args: {e.args}")
+        return jsonify({'error': f'서버 오류: {str(e)}'}), 500
+
+@app.route('/test')
+def test():
+    return jsonify({'status': 'ok', 'message': 'Server is running'})
 
 if __name__ == '__main__':
     app.run(debug=True)

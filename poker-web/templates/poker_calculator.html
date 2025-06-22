@@ -766,25 +766,40 @@
       document.getElementById("result").innerHTML = '<span class="success">🔄 정확한 계산 중... 잠시만 기다려주세요.</span>';
 
       // 백엔드 API 호출
-      fetch('http://localhost:5000/calculate', {
+      fetch('/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           my_hand: selectedCards.my.join(' '),
           opponents: opponents,
           community: selectedCards.board.join(' ')
-        })
+        }),
+        mode: 'cors',
+        credentials: 'omit'
       })
       .then(response => response.json())
       .then(data => {
         displayResults(data);
       })
       .catch(error => {
+        console.error('API Error:', error);
+        let errorMessage = '서버 연결 오류가 발생했습니다.';
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          errorMessage = '네트워크 연결을 확인해주세요.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = '브라우저 보안 정책으로 인한 오류입니다.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = '요청 시간이 초과되었습니다. 다시 시도해주세요.';
+        }
+        
         document.getElementById("result").innerHTML = `
           <span class="error">
-            서버 연결 오류: ${error.message}<br>
+            ${errorMessage}<br>
+            오류 상세: ${error.message}<br>
             잠시 후 다시 시도해주세요.<br>
             문제가 지속되면 페이지를 새로고침해주세요.
           </span>
@@ -834,6 +849,11 @@
 
     // 초기화
     window.onload = function() {
+      // 모바일 디버깅 정보
+      console.log('User Agent:', navigator.userAgent);
+      console.log('Platform:', navigator.platform);
+      console.log('Current URL:', window.location.href);
+      
       createCardGrid('my-grid');
       createCardGrid('opp-1-grid');
       createCardGrid('board-cards-grid');

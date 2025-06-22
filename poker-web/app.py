@@ -10,21 +10,21 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# CORS 설정 강화
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
-    }
-})
+# CORS 설정 강화 (모바일 브라우저 지원)
+CORS(app, 
+     resources={r"/*": {"origins": "*"}},
+     supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"])
 
 @app.after_request
 def after_request(response):
     """모든 응답에 CORS 헤더 추가"""
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Max-Age', '86400')
     return response
 
 # 현재 디렉토리 확인
@@ -208,4 +208,4 @@ def diagnose():
     return jsonify(diagnosis)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

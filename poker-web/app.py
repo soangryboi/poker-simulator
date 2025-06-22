@@ -9,7 +9,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# CORS 설정 강화
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    }
+})
+
+@app.after_request
+def after_request(response):
+    """모든 응답에 CORS 헤더 추가"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # 현재 디렉토리 확인
 logger.info(f"Current working directory: {os.getcwd()}")
@@ -76,8 +92,16 @@ def calculator():
         logger.error(f"Error in calculator route: {e}")
         return f"Error: {str(e)}", 500
 
-@app.route('/calculate', methods=['POST'])
+@app.route('/calculate', methods=['POST', 'OPTIONS'])
 def calculate_probability():
+    # OPTIONS 요청 처리 (CORS preflight)
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+    
     try:
         # 모듈 import 상태 확인
         if exact_probability is None:
@@ -146,7 +170,7 @@ def calculate_probability():
         
         calculation_time = time.time() - start_time
         
-        return jsonify({
+        response = jsonify({
             'win_rates': win_rates,
             'tie_rate': tie_rate,
             'total_players': len(opponents) + 1,
@@ -154,11 +178,14 @@ def calculate_probability():
             'calculation_time': calculation_time
         })
         
+        return response
+        
     except Exception as e:
         logger.error(f"Error in calculate route: {e}")
         logger.error(f"Exception type: {type(e)}")
         logger.error(f"Exception args: {e.args}")
-        return jsonify({'error': f'서버 오류: {str(e)}'}), 500
+        response = jsonify({'error': f'서버 오류: {str(e)}'})
+        return response, 500
 
 @app.route('/test')
 def test():

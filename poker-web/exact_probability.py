@@ -351,6 +351,174 @@ def exact_multiplayer_preflop(my_hand, other_hands, trials=50000):
     
     return win_rate, tie_rate, loss_rate
 
+def calculate_individual_win_rates(hands, community):
+    """
+    모든 플레이어의 개별 승률을 계산
+    hands: [플레이어1_핸드, 플레이어2_핸드, ...]
+    community: 커뮤니티 카드
+    returns: [플레이어1_승률, 플레이어2_승률, ...], 무승부_확률
+    """
+    if len(hands) == 0:
+        return [], 0.0
+    
+    # 각 플레이어의 핸드 점수 계산
+    scores = []
+    for hand in hands:
+        score = evaluate_hand(hand + community)
+        scores.append(score)
+    
+    # 승자 결정
+    best_score = max(scores)
+    winners = [i for i, score in enumerate(scores) if score == best_score]
+    
+    # 개별 승률 계산
+    win_rates = []
+    for i in range(len(hands)):
+        if i in winners:
+            win_rate = 1.0 / len(winners)  # 승자들끼리 균등 분배
+        else:
+            win_rate = 0.0
+        win_rates.append(win_rate)
+    
+    # 무승부 확률 (승자가 2명 이상일 때)
+    tie_rate = 1.0 if len(winners) > 1 else 0.0
+    
+    return win_rates, tie_rate
+
+def exact_multiplayer_river_individual(my_hand, other_hands, community):
+    """
+    다중 플레이어 리버 상황에서 각 플레이어의 개별 승률 계산
+    """
+    all_hands = [my_hand] + other_hands
+    win_rates, tie_rate = calculate_individual_win_rates(all_hands, community)
+    
+    return win_rates, tie_rate
+
+def exact_multiplayer_turn_individual(my_hand, other_hands, community):
+    """
+    다중 플레이어 턴 상황에서 각 플레이어의 개별 승률 계산
+    """
+    all_hands = [my_hand] + other_hands
+    total_win_rates = [0.0] * len(all_hands)
+    total_tie_rate = 0.0
+    total_scenarios = 0
+    
+    # 사용된 카드들
+    used_cards = set()
+    for hand in all_hands:
+        used_cards.update(hand)
+    used_cards.update(community)
+    
+    # 남은 카드들
+    remaining_cards = []
+    for rank in "23456789TJQKA":
+        for suit in "SHDC":
+            card = Card(rank, suit)
+            if card not in used_cards:
+                remaining_cards.append(card)
+    
+    # 남은 1장의 카드로 모든 경우 계산
+    for river_card in remaining_cards:
+        full_community = community + [river_card]
+        win_rates, tie_rate = calculate_individual_win_rates(all_hands, full_community)
+        
+        for i in range(len(all_hands)):
+            total_win_rates[i] += win_rates[i]
+        total_tie_rate += tie_rate
+        total_scenarios += 1
+    
+    # 평균 계산
+    final_win_rates = [rate / total_scenarios for rate in total_win_rates]
+    final_tie_rate = total_tie_rate / total_scenarios
+    
+    return final_win_rates, final_tie_rate
+
+def exact_multiplayer_flop_individual(my_hand, other_hands, community):
+    """
+    다중 플레이어 플랍 상황에서 각 플레이어의 개별 승률 계산
+    """
+    all_hands = [my_hand] + other_hands
+    total_win_rates = [0.0] * len(all_hands)
+    total_tie_rate = 0.0
+    total_scenarios = 0
+    
+    # 사용된 카드들
+    used_cards = set()
+    for hand in all_hands:
+        used_cards.update(hand)
+    used_cards.update(community)
+    
+    # 남은 카드들
+    remaining_cards = []
+    for rank in "23456789TJQKA":
+        for suit in "SHDC":
+            card = Card(rank, suit)
+            if card not in used_cards:
+                remaining_cards.append(card)
+    
+    # 남은 2장의 카드 조합으로 모든 경우 계산
+    for turn_card, river_card in combinations(remaining_cards, 2):
+        full_community = community + [turn_card, river_card]
+        win_rates, tie_rate = calculate_individual_win_rates(all_hands, full_community)
+        
+        for i in range(len(all_hands)):
+            total_win_rates[i] += win_rates[i]
+        total_tie_rate += tie_rate
+        total_scenarios += 1
+    
+    # 평균 계산
+    final_win_rates = [rate / total_scenarios for rate in total_win_rates]
+    final_tie_rate = total_tie_rate / total_scenarios
+    
+    return final_win_rates, final_tie_rate
+
+def exact_multiplayer_preflop_individual(my_hand, other_hands, trials=50000):
+    """
+    다중 플레이어 프리플랍 상황에서 각 플레이어의 개별 승률 계산
+    """
+    all_hands = [my_hand] + other_hands
+    
+    # 플레이어 수에 따라 시뮬레이션 횟수 조정
+    if len(all_hands) <= 3:
+        adjusted_trials = 50000
+    elif len(all_hands) <= 5:
+        adjusted_trials = 30000
+    elif len(all_hands) <= 7:
+        adjusted_trials = 20000
+    else:  # 8명 이상
+        adjusted_trials = 15000
+    
+    total_win_rates = [0.0] * len(all_hands)
+    total_tie_rate = 0.0
+    
+    # 사용된 카드들
+    used_cards = set()
+    for hand in all_hands:
+        used_cards.update(hand)
+    
+    # 남은 카드들
+    remaining_cards = []
+    for rank in "23456789TJQKA":
+        for suit in "SHDC":
+            card = Card(rank, suit)
+            if card not in used_cards:
+                remaining_cards.append(card)
+    
+    # 시뮬레이션으로 계산
+    for _ in range(adjusted_trials):
+        community = random.sample(remaining_cards, 5)
+        win_rates, tie_rate = calculate_individual_win_rates(all_hands, community)
+        
+        for i in range(len(all_hands)):
+            total_win_rates[i] += win_rates[i]
+        total_tie_rate += tie_rate
+    
+    # 평균 계산
+    final_win_rates = [rate / adjusted_trials for rate in total_win_rates]
+    final_tie_rate = total_tie_rate / adjusted_trials
+    
+    return final_win_rates, final_tie_rate
+
 # 테스트 함수
 def test_exact_probabilities():
     print("=== 정확한 확률 계산 테스트 ===")

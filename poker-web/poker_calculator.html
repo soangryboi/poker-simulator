@@ -47,8 +47,8 @@
       margin-bottom: 15px;
     }
     .card {
-      width: 55px;
-      height: 80px;
+      width: 50px;
+      height: 75px;
       border: 2px solid #ddd;
       border-radius: 8px;
       display: flex;
@@ -56,7 +56,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 24px;
       font-weight: bold;
       transition: all 0.2s;
       background: white;
@@ -75,7 +75,7 @@
       cursor: not-allowed;
     }
     .suit-symbols {
-      font-size: 16px;
+      font-size: 20px;
       margin-top: 3px;
     }
     .selected-cards {
@@ -88,8 +88,8 @@
       border-radius: 5px;
     }
     .selected-card {
-      width: 65px;
-      height: 90px;
+      width: 60px;
+      height: 85px;
       border: 2px solid #e74c3c;
       border-radius: 8px;
       display: flex;
@@ -100,10 +100,10 @@
       color: #e74c3c;
       font-weight: bold;
       position: relative;
-      font-size: 18px;
+      font-size: 24px;
     }
     .selected-card .suit-symbols {
-      font-size: 18px;
+      font-size: 24px;
       margin-top: 3px;
     }
     .remove-card {
@@ -202,8 +202,8 @@
       margin: 20px 0;
     }
     .board-slot {
-      width: 65px;
-      height: 90px;
+      width: 60px;
+      height: 85px;
       border: 3px dashed #bdc3c7;
       border-radius: 8px;
       display: flex;
@@ -239,8 +239,8 @@
       margin: 20px 0;
     }
     .hand-slot {
-      width: 65px;
-      height: 90px;
+      width: 60px;
+      height: 85px;
       border: 3px dashed #bdc3c7;
       border-radius: 8px;
       display: flex;
@@ -270,14 +270,34 @@
       white-space: pre-line;
       font-size: 10px;
     }
+    .win-rates {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #28a745;
+    }
+    .player-win-rate {
+      margin: 8px 0;
+      padding: 8px;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+    }
+    .player-win-rate:first-child {
+      background: #d4edda;
+      border-color: #c3e6cb;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🎯 정확한 포커 승률 계산기</h1>
-    <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">
-      카드를 클릭해서 선택하세요! (2명~6명 플레이어 지원)
-    </p>
+    <h1>🎯 포커 승률 계산기</h1>
+    <div class="info">
+      <p>카드를 클릭해서 선택하세요! (2명~10명 플레이어 지원)</p>
+      <p>프리플랍, 플랍, 턴, 리버 모든 상황에서 정확한 확률 계산!</p>
+    </div>
 
     <!-- 내 카드 선택 -->
     <div class="input-section">
@@ -286,7 +306,7 @@
         <div class="hand-slot empty" data-slot="0" onclick="selectHandSlot('my', 0)"></div>
         <div class="hand-slot empty" data-slot="1" onclick="selectHandSlot('my', 1)"></div>
       </div>
-      <div class="card-grid" id="my-cards-grid" style="display: none;">
+      <div class="card-grid" id="my-grid" style="display: none;">
         <!-- 카드들이 JavaScript로 생성됩니다 -->
       </div>
       <div class="selected-cards" id="my-selected-cards">
@@ -347,10 +367,10 @@
     <div class="info">
       <h4>💡 사용법</h4>
       <ul>
-        <li><strong>카드 선택:</strong> 카드를 클릭해서 선택하세요. 선택된 카드는 빨간색으로 표시됩니다.</li>
-        <li><strong>플레이어:</strong> 2명~6명까지 지원 (내가 이기려면 모든 상대를 이겨야 함)</li>
-        <li><strong>보드 카드:</strong> 0장=프리플랍, 3장=플랍, 4장=턴, 5장=리버</li>
-        <li><strong>정확도:</strong> 리버/턴/플랍=100% 정확, 프리플랍=고정밀 시뮬레이션</li>
+        <li><strong>카드 선택:</strong> 클릭으로 직관적인 카드 선택</li>
+        <li><strong>보드 카드:</strong> 3장(플랍), 4장(턴), 5장(리버) 또는 0장(프리플랍)만 지원</li>
+        <li><strong>플레이어:</strong> 2명~10명까지 지원 (내가 이기려면 모든 상대를 이겨야 함)</li>
+        <li><strong>계산 방식:</strong> 정확한 조합 계산 (프리플랍만 시뮬레이션)</li>
       </ul>
     </div>
   </div>
@@ -415,7 +435,7 @@
     // 보드 표시 업데이트
     function updateBoardDisplay() {
       for (let i = 0; i < 5; i++) {
-        const slot = document.querySelector(`[data-slot="${i}"]`);
+        const slot = document.querySelector(`#board-layout [data-slot="${i}"]`);
         const cardCode = boardSlots[i];
         
         if (cardCode) {
@@ -423,8 +443,8 @@
           const rank = cardCode.slice(0, -1);
           const suit = cardCode.slice(-1);
           slot.innerHTML = `
-            <div style="font-size: 16px; font-weight: bold;">${rank}</div>
-            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 16px;">${suitSymbols[suit]}</div>
+            <div style="font-size: 24px; font-weight: bold;">${rank}</div>
+            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 24px;">${suitSymbols[suit]}</div>
           `;
         } else {
           slot.className = 'board-slot empty';
@@ -444,8 +464,11 @@
       currentHandPlayer = player;
       currentHandSlot = slotIndex;
       const cardGrid = document.getElementById(`${player}-grid`);
-      cardGrid.style.display = 'grid';
-      cardGrid.scrollIntoView({ behavior: 'smooth' });
+      
+      if (cardGrid) {
+        cardGrid.style.display = 'grid';
+        cardGrid.scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     // 핸드 카드 제거
@@ -473,8 +496,8 @@
           const rank = cardCode.slice(0, -1);
           const suit = cardCode.slice(-1);
           slot.innerHTML = `
-            <div style="font-size: 18px; font-weight: bold;">${rank}</div>
-            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 18px;">${suitSymbols[suit]}</div>
+            <div style="font-size: 24px; font-weight: bold;">${rank}</div>
+            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 24px;">${suitSymbols[suit]}</div>
           `;
         } else {
           slot.className = 'hand-slot empty';
@@ -509,9 +532,6 @@
 
     // 카드 선택
     function selectCard(containerId, cardCode) {
-      const maxCards = containerId === 'board-cards-grid' ? 5 : 2;
-      const selectionKey = getSelectionKey(containerId);
-      
       if (containerId === 'board-cards-grid') {
         // 보드 카드 선택
         if (currentBoardSlot === null) {
@@ -538,9 +558,9 @@
         return;
       }
       
-      // 일반 카드 선택 (내 카드, 상대 카드)
-      if (selectedCards[selectionKey].length >= maxCards) {
-        alert(`최대 ${maxCards}장까지만 선택할 수 있습니다.`);
+      // 핸드 카드 선택 (내 카드, 상대 카드)
+      if (currentHandPlayer === null || currentHandSlot === null) {
+        alert('핸드 슬롯을 먼저 선택해주세요.');
         return;
       }
       
@@ -549,9 +569,17 @@
         return;
       }
       
-      selectedCards[selectionKey].push(cardCode);
-      updateCardDisplay(selectionKey);
+      // 핸드 슬롯에 카드 추가
+      handSlots[currentHandPlayer][currentHandSlot] = cardCode;
+      selectedCards[currentHandPlayer].push(cardCode);
+      
+      updateHandDisplay(currentHandPlayer);
       updateCardStates();
+      
+      // 카드 그리드 숨기기
+      document.getElementById(`${currentHandPlayer}-grid`).style.display = 'none';
+      currentHandPlayer = null;
+      currentHandSlot = null;
     }
 
     // 카드 사용 여부 확인
@@ -566,7 +594,7 @@
 
     // 선택 키 가져오기
     function getSelectionKey(containerId) {
-      if (containerId === 'my-cards-grid') return 'my';
+      if (containerId === 'my-grid') return 'my';
       if (containerId === 'board-cards-grid') return 'board';
       if (containerId.startsWith('opp-')) return containerId.replace('-grid', '');
       return 'my';
@@ -629,7 +657,14 @@
         document.getElementById('board-cards-grid').style.display = 'none';
         currentBoardSlot = null;
       } else {
-        updateCardDisplay(selectionKey);
+        // 핸드 슬롯 초기화
+        if (handSlots[selectionKey]) {
+          handSlots[selectionKey] = [null, null];
+          updateHandDisplay(selectionKey);
+          document.getElementById(`${selectionKey}-grid`).style.display = 'none';
+          currentHandPlayer = null;
+          currentHandSlot = null;
+        }
       }
       
       updateCardStates();
@@ -637,7 +672,7 @@
 
     // 상대 플레이어 추가
     function addPlayer() {
-      if (playerCount < 5) {
+      if (playerCount < 9) {
         playerCount++;
         const container = document.getElementById('opponents-container');
         const newPlayer = document.createElement('div');
@@ -658,8 +693,11 @@
         container.appendChild(newPlayer);
         createCardGrid(`opp-${playerCount}-grid`);
         
+        // 새로운 플레이어의 핸드 슬롯 초기화
+        handSlots[`opp-${playerCount}`] = [null, null];
+        
         document.querySelector('.remove-player-btn').style.display = 'inline-block';
-        if (playerCount === 5) {
+        if (playerCount === 9) {
           document.querySelector('.add-player-btn').style.display = 'none';
         }
       }
@@ -700,6 +738,12 @@
         return;
       }
 
+      // 보드 카드 검증 - 1장 또는 2장은 허용하지 않음
+      if (selectedCards.board.length === 1 || selectedCards.board.length === 2) {
+        document.getElementById("result").innerHTML = '<span class="error">보드 카드는 3장(플랍), 4장(턴), 5장(리버) 또는 아예 선택하지 않아야 합니다. 1장 또는 2장만 선택할 수 없습니다.</span>';
+        return;
+      }
+
       // 상황 판단
       let situation = "";
       let calculationType = "";
@@ -707,12 +751,6 @@
       if (selectedCards.board.length === 0) {
         situation = "프리플랍";
         calculationType = "고정밀 시뮬레이션 (50,000번)";
-      } else if (selectedCards.board.length === 1) {
-        situation = `보드 카드 1장`;
-        calculationType = "정확한 계산";
-      } else if (selectedCards.board.length === 2) {
-        situation = `보드 카드 2장`;
-        calculationType = "정확한 계산";
       } else if (selectedCards.board.length === 3) {
         situation = "플랍";
         calculationType = "정확한 계산";
@@ -741,32 +779,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.error) {
-          document.getElementById("result").innerHTML = `<span class="error">오류: ${data.error}</span>`;
-          return;
-        }
-
-        // 결과 표시
-        let opponentsHTML = "";
-        for (let i = 0; i < opponents.length; i++) {
-          opponentsHTML += `상대 ${i + 1} 핸드: ${opponents[i]}<br>`;
-        }
-
-        const resultHTML = `
-          <div class="success">
-            <strong>🎯 ${data.total_players}명 플레이어 - ${situation} 상황 (${calculationType})</strong><br><br>
-            <strong>입력 확인:</strong><br>
-            내 핸드: ${selectedCards.my.join(' ')}<br>
-            ${opponentsHTML}
-            ${selectedCards.board.length > 0 ? `보드: ${selectedCards.board.join(' ')}<br>` : ''}<br>
-            <strong>결과:</strong><br>
-            승률: ${data.win.toFixed(2)}%<br>
-            무승부: ${data.tie.toFixed(2)}%<br>
-            패배: ${data.loss.toFixed(2)}%
-          </div>
-        `;
-
-        document.getElementById("result").innerHTML = resultHTML;
+        displayResults(data);
       })
       .catch(error => {
         document.getElementById("result").innerHTML = `
@@ -779,11 +792,56 @@
       });
     }
 
+    function displayResults(data) {
+      const resultsDiv = document.getElementById('result');
+      resultsDiv.innerHTML = '';
+      
+      if (data.error) {
+        resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;
+        return;
+      }
+      
+      let html = '<div class="success">';
+      html += '<h4>계산 결과</h4>';
+      
+      if (data.win_rates && data.win_rates.length > 0) {
+        html += '<div class="win-rates">';
+        data.win_rates.forEach((rate, index) => {
+          const playerName = index === 0 ? '나' : `플레이어 ${index}`;
+          const percentage = (rate * 100).toFixed(2);
+          html += `<div class="player-win-rate">
+            <strong>${playerName}:</strong> ${percentage}%
+          </div>`;
+        });
+        html += '</div>';
+      }
+      
+      if (data.tie_rate !== undefined) {
+        html += `<p><strong>무승부 확률:</strong> ${(data.tie_rate * 100).toFixed(2)}%</p>`;
+      }
+      
+      if (data.total_combinations) {
+        html += `<p><strong>총 조합 수:</strong> ${data.total_combinations.toLocaleString()}</p>`;
+      }
+      
+      if (data.calculation_time) {
+        html += `<p><strong>계산 시간:</strong> ${data.calculation_time.toFixed(3)}초</p>`;
+      }
+      
+      html += '</div>';
+      resultsDiv.innerHTML = html;
+    }
+
     // 초기화
     window.onload = function() {
-      createCardGrid('my-cards-grid');
+      createCardGrid('my-grid');
       createCardGrid('opp-1-grid');
       createCardGrid('board-cards-grid');
+      
+      // 모든 플레이어의 핸드 슬롯 초기화 (9명까지)
+      for (let i = 1; i <= 9; i++) {
+        handSlots[`opp-${i}`] = [null, null];
+      }
     };
   </script>
 </body>

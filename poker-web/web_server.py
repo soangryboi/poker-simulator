@@ -4,10 +4,13 @@ from exact_probability import (
     exact_river_probability, exact_turn_probability, exact_flop_probability,
     exact_partial_community_probability, exact_preflop_probability,
     exact_multiplayer_river, exact_multiplayer_turn, exact_multiplayer_partial_community,
-    exact_multiplayer_preflop
+    exact_multiplayer_preflop,
+    exact_multiplayer_river_individual, exact_multiplayer_turn_individual,
+    exact_multiplayer_flop_individual, exact_multiplayer_preflop_individual
 )
 from poker import Card
 import re
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -34,6 +37,8 @@ def parse_hand(hand_str):
 @app.route('/calculate', methods=['POST'])
 def calculate_probability():
     try:
+        start_time = time.time()
+        
         data = request.json
         if data is None:
             return jsonify({'error': '잘못된 요청 데이터입니다'}), 400
@@ -60,35 +65,42 @@ def calculate_probability():
         if len(community) == 5:  # 리버
             if len(opponents) == 1:
                 win, tie, loss = exact_river_probability(my_hand, opponents[0], community)
+                win_rates = [win / 100, (100 - win - tie) / 100]
+                tie_rate = tie / 100
             else:
-                win, tie, loss = exact_multiplayer_river(my_hand, opponents, community)
+                win_rates, tie_rate = exact_multiplayer_river_individual(my_hand, opponents, community)
         elif len(community) == 4:  # 턴
             if len(opponents) == 1:
                 win, tie, loss = exact_turn_probability(my_hand, opponents[0], community)
+                win_rates = [win / 100, (100 - win - tie) / 100]
+                tie_rate = tie / 100
             else:
-                win, tie, loss = exact_multiplayer_turn(my_hand, opponents, community)
+                win_rates, tie_rate = exact_multiplayer_turn_individual(my_hand, opponents, community)
         elif len(community) == 3:  # 플랍
             if len(opponents) == 1:
                 win, tie, loss = exact_flop_probability(my_hand, opponents[0], community)
+                win_rates = [win / 100, (100 - win - tie) / 100]
+                tie_rate = tie / 100
             else:
-                win, tie, loss = exact_multiplayer_partial_community(my_hand, opponents, community)
-        elif len(community) in [1, 2]:  # 부분 보드
-            if len(opponents) == 1:
-                win, tie, loss = exact_partial_community_probability(my_hand, opponents[0], community)
-            else:
-                win, tie, loss = exact_multiplayer_partial_community(my_hand, opponents, community)
+                win_rates, tie_rate = exact_multiplayer_flop_individual(my_hand, opponents, community)
+        elif len(community) in [1, 2]:  # 부분 보드 - 허용하지 않음
+            return jsonify({'error': '보드 카드는 3장(플랍), 4장(턴), 5장(리버) 또는 아예 선택하지 않아야 합니다. 1장 또는 2장만 선택할 수 없습니다.'}), 400
         else:  # 프리플랍
             if len(opponents) == 1:
                 win, tie, loss = exact_preflop_probability(my_hand, opponents[0])
+                win_rates = [win / 100, (100 - win - tie) / 100]
+                tie_rate = tie / 100
             else:
-                win, tie, loss = exact_multiplayer_preflop(my_hand, opponents)
+                win_rates, tie_rate = exact_multiplayer_preflop_individual(my_hand, opponents)
+        
+        calculation_time = time.time() - start_time
         
         return jsonify({
-            'win': round(win, 2),
-            'tie': round(tie, 2),
-            'loss': round(loss, 2),
+            'win_rates': win_rates,
+            'tie_rate': tie_rate,
             'total_players': len(opponents) + 1,
-            'community_cards': len(community)
+            'community_cards': len(community),
+            'calculation_time': calculation_time
         })
         
     except Exception as e:

@@ -2,6 +2,17 @@ from poker import Card, evaluate_hand, compare_hands
 from itertools import combinations
 import random
 
+# 카드 캐시 생성 (성능 최적화)
+CARD_CACHE = {}
+for rank in "23456789TJQKA":
+    for suit in "SHDC":
+        card = Card(rank, suit)
+        CARD_CACHE[f"{rank}{suit}"] = card
+
+def get_card(rank, suit):
+    """캐시된 카드 반환 (성능 최적화)"""
+    return CARD_CACHE[f"{rank}{suit}"]
+
 def exact_river_probability(my_hand, opp_hand, community):
     """
     리버 상황에서의 정확한 승률 계산
@@ -26,16 +37,18 @@ def exact_turn_probability(my_hand, opp_hand, community):
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + opp_hand + community)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + opp_hand + community:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 1장의 카드로 모든 경우 계산
     for river_card in remaining_cards:
@@ -65,16 +78,18 @@ def exact_flop_probability(my_hand, opp_hand, community):
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + opp_hand + community)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + opp_hand + community:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 2장의 카드 조합으로 모든 경우 계산
     for turn_card, river_card in combinations(remaining_cards, 2):
@@ -103,16 +118,18 @@ def exact_partial_community_probability(my_hand, opp_hand, community):
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + opp_hand + community)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + opp_hand + community:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 카드들로 5장이 되도록 조합 계산
     needed_cards = 5 - len(community)
@@ -136,23 +153,25 @@ def exact_partial_community_probability(my_hand, opp_hand, community):
     
     return win_rate, tie_rate, loss_rate
 
-def exact_preflop_probability(my_hand, opp_hand, trials=50000):
+def exact_preflop_probability(my_hand, opp_hand, trials=20000):
     """
     프리플랍 상황에서의 승률 계산 (시뮬레이션 사용)
-    커뮤니티 카드가 없는 경우
+    커뮤니티 카드가 없는 경우 (시뮬레이션 횟수 감소)
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + opp_hand)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + opp_hand:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 시뮬레이션으로 계산 (정확한 계산은 너무 느림)
     for _ in range(trials):
@@ -209,18 +228,21 @@ def exact_multiplayer_turn(my_hand, other_hands, community):
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + community)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + community:
+        used_cards.add(f"{card.rank}{card.suit}")
     for hand in other_hands:
-        used_cards.update(hand)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 1장의 카드로 모든 경우 계산
     for river_card in remaining_cards:
@@ -258,18 +280,21 @@ def exact_multiplayer_partial_community(my_hand, other_hands, community):
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand + community)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand + community:
+        used_cards.add(f"{card.rank}{card.suit}")
     for hand in other_hands:
-        used_cards.update(hand)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 카드들로 5장이 되도록 조합 계산
     needed_cards = 5 - len(community)
@@ -302,24 +327,27 @@ def exact_multiplayer_partial_community(my_hand, other_hands, community):
     
     return win_rate, tie_rate, loss_rate
 
-def exact_multiplayer_preflop(my_hand, other_hands, trials=50000):
+def exact_multiplayer_preflop(my_hand, other_hands, trials=20000):
     """
-    다중 플레이어 프리플랍 상황에서의 승률 계산
+    다중 플레이어 프리플랍 상황에서의 승률 계산 (시뮬레이션 횟수 감소)
     """
     wins = ties = losses = 0
     
-    # 사용된 카드들
-    used_cards = set(my_hand)
+    # 사용된 카드들 (성능 최적화)
+    used_cards = set()
+    for card in my_hand:
+        used_cards.add(f"{card.rank}{card.suit}")
     for hand in other_hands:
-        used_cards.update(hand)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 시뮬레이션으로 계산
     for _ in range(trials):
@@ -403,19 +431,21 @@ def exact_multiplayer_turn_individual(my_hand, other_hands, community):
     total_tie_rate = 0.0
     total_scenarios = 0
     
-    # 사용된 카드들
+    # 사용된 카드들 (성능 최적화)
     used_cards = set()
     for hand in all_hands:
-        used_cards.update(hand)
-    used_cards.update(community)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
+    for card in community:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 1장의 카드로 모든 경우 계산
     for river_card in remaining_cards:
@@ -442,19 +472,21 @@ def exact_multiplayer_flop_individual(my_hand, other_hands, community):
     total_tie_rate = 0.0
     total_scenarios = 0
     
-    # 사용된 카드들
+    # 사용된 카드들 (성능 최적화)
     used_cards = set()
     for hand in all_hands:
-        used_cards.update(hand)
-    used_cards.update(community)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
+    for card in community:
+        used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 남은 2장의 카드 조합으로 모든 경우 계산
     for turn_card, river_card in combinations(remaining_cards, 2):
@@ -472,37 +504,38 @@ def exact_multiplayer_flop_individual(my_hand, other_hands, community):
     
     return final_win_rates, final_tie_rate
 
-def exact_multiplayer_preflop_individual(my_hand, other_hands, trials=50000):
+def exact_multiplayer_preflop_individual(my_hand, other_hands, trials=20000):
     """
-    다중 플레이어 프리플랍 상황에서 각 플레이어의 개별 승률 계산
+    다중 플레이어 프리플랍 상황에서 각 플레이어의 개별 승률 계산 (시뮬레이션 횟수 감소)
     """
     all_hands = [my_hand] + other_hands
     
-    # 플레이어 수에 따라 시뮬레이션 횟수 조정
+    # 플레이어 수에 따라 시뮬레이션 횟수 조정 (성능 최적화)
     if len(all_hands) <= 3:
-        adjusted_trials = 50000
-    elif len(all_hands) <= 5:
-        adjusted_trials = 30000
-    elif len(all_hands) <= 7:
         adjusted_trials = 20000
-    else:  # 8명 이상
+    elif len(all_hands) <= 5:
         adjusted_trials = 15000
+    elif len(all_hands) <= 7:
+        adjusted_trials = 10000
+    else:  # 8명 이상
+        adjusted_trials = 8000
     
     total_win_rates = [0.0] * len(all_hands)
     total_tie_rate = 0.0
     
-    # 사용된 카드들
+    # 사용된 카드들 (성능 최적화)
     used_cards = set()
     for hand in all_hands:
-        used_cards.update(hand)
+        for card in hand:
+            used_cards.add(f"{card.rank}{card.suit}")
     
-    # 남은 카드들
+    # 남은 카드들 (캐시 사용)
     remaining_cards = []
     for rank in "23456789TJQKA":
         for suit in "SHDC":
-            card = Card(rank, suit)
-            if card not in used_cards:
-                remaining_cards.append(card)
+            card_key = f"{rank}{suit}"
+            if card_key not in used_cards:
+                remaining_cards.append(CARD_CACHE[card_key])
     
     # 시뮬레이션으로 계산
     for _ in range(adjusted_trials):

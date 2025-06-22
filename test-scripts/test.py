@@ -1,5 +1,5 @@
 from poker import Card
-from simulate import simulate_vs
+from simulate_treys import simulate_vs
 
 def main():
     my_hand = [Card('A', 'S'), Card('A', 'D')]

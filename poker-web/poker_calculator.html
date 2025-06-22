@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>포커 승률 계산기</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .input-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #34495e;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    .section-title::before {
+      content: "🎯";
+      margin-right: 10px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .card {
+      width: 55px;
+      height: 80px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.2s;
+      background: white;
+    }
+    .card:hover {
+      border-color: #3498db;
+      transform: scale(1.05);
+    }
+    .card.selected {
+      border-color: #e74c3c;
+      background-color: #fdf2f2;
+      color: #e74c3c;
+    }
+    .card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .suit-symbols {
+      font-size: 16px;
+      margin-top: 3px;
+    }
+    .selected-cards {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      min-height: 85px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    .selected-card {
+      width: 65px;
+      height: 90px;
+      border: 2px solid #e74c3c;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #fdf2f2;
+      color: #e74c3c;
+      font-weight: bold;
+      position: relative;
+      font-size: 18px;
+    }
+    .selected-card .suit-symbols {
+      font-size: 18px;
+      margin-top: 3px;
+    }
+    .remove-card {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .add-player-btn, .remove-player-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .add-player-btn {
+      background-color: #27ae60;
+      color: white;
+    }
+    .add-player-btn:hover {
+      background-color: #229954;
+    }
+    .remove-player-btn {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .remove-player-btn:hover {
+      background-color: #c0392b;
+    }
+    .calculate-btn {
+      background-color: #3498db;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .calculate-btn:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      border-left: 4px solid #3498db;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .success {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .info {
+      color: #7f8c8d;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    .clear-btn {
+      background-color: #95a5a6;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .clear-btn:hover {
+      background-color: #7f8c8d;
+    }
+    .board-layout {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .board-slot {
+      width: 65px;
+      height: 90px;
+      border: 3px dashed #bdc3c7;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #f8f9fa;
+    }
+    .board-slot:hover {
+      border-color: #3498db;
+      background: #ebf3fd;
+    }
+    .board-slot.filled {
+      border-style: solid;
+      border-color: #e74c3c;
+      background: #fdf2f2;
+    }
+    .board-slot.empty {
+      color: #7f8c8d;
+      font-size: 12px;
+      text-align: center;
+    }
+    .board-slot.empty::after {
+      content: "클릭하여\n카드 선택";
+      white-space: pre-line;
+      font-size: 10px;
+    }
+    .hand-layout {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .hand-slot {
+      width: 65px;
+      height: 90px;
+      border: 3px dashed #bdc3c7;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #f8f9fa;
+    }
+    .hand-slot:hover {
+      border-color: #3498db;
+      background: #ebf3fd;
+    }
+    .hand-slot.filled {
+      border-style: solid;
+      border-color: #e74c3c;
+      background: #fdf2f2;
+    }
+    .hand-slot.empty {
+      color: #7f8c8d;
+      font-size: 12px;
+      text-align: center;
+    }
+    .hand-slot.empty::after {
+      content: "클릭하여\n카드 선택";
+      white-space: pre-line;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 정확한 포커 승률 계산기</h1>
+    <p style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">
+      카드를 클릭해서 선택하세요! (2명~6명 플레이어 지원)
+    </p>
+
+    <!-- 내 카드 선택 -->
+    <div class="input-section">
+      <div class="section-title">내 카드 2장 선택</div>
+      <div class="hand-layout" id="my-hand-layout">
+        <div class="hand-slot empty" data-slot="0" onclick="selectHandSlot('my', 0)"></div>
+        <div class="hand-slot empty" data-slot="1" onclick="selectHandSlot('my', 1)"></div>
+      </div>
+      <div class="card-grid" id="my-cards-grid" style="display: none;">
+        <!-- 카드들이 JavaScript로 생성됩니다 -->
+      </div>
+      <div class="selected-cards" id="my-selected-cards">
+        <div style="color: #7f8c8d; display: flex; align-items: center;">카드를 선택해주세요</div>
+      </div>
+      <button class="clear-btn" onclick="clearSelection('my')">선택 초기화</button>
+    </div>
+
+    <!-- 상대 플레이어들 -->
+    <div class="input-section">
+      <div class="section-title">상대 플레이어들</div>
+      <div id="opponents-container">
+        <div class="opponent-section">
+          <div style="font-weight: bold; margin-bottom: 10px;">상대 1 카드 2장 선택</div>
+          <div class="hand-layout" id="opp-1-hand-layout">
+            <div class="hand-slot empty" data-slot="0" onclick="selectHandSlot('opp-1', 0)"></div>
+            <div class="hand-slot empty" data-slot="1" onclick="selectHandSlot('opp-1', 1)"></div>
+          </div>
+          <div class="card-grid" id="opp-1-grid" style="display: none;"></div>
+          <div class="selected-cards" id="opp-1-selected-cards">
+            <div style="color: #7f8c8d; display: flex; align-items: center;">카드를 선택해주세요</div>
+          </div>
+          <button class="clear-btn" onclick="clearSelection('opp-1')">선택 초기화</button>
+        </div>
+      </div>
+      <div class="player-controls">
+        <button class="add-player-btn" onclick="addPlayer()">+ 상대 추가</button>
+        <button class="remove-player-btn" onclick="removePlayer()" style="display: none;">- 상대 제거</button>
+      </div>
+    </div>
+
+    <!-- 보드 카드 선택 -->
+    <div class="input-section">
+      <div class="section-title">보드 카드 선택 (0~5장)</div>
+      <div class="board-layout" id="board-layout">
+        <div class="board-slot empty" data-slot="0" onclick="selectBoardSlot(0)"></div>
+        <div class="board-slot empty" data-slot="1" onclick="selectBoardSlot(1)"></div>
+        <div class="board-slot empty" data-slot="2" onclick="selectBoardSlot(2)"></div>
+        <div class="board-slot empty" data-slot="3" onclick="selectBoardSlot(3)"></div>
+        <div class="board-slot empty" data-slot="4" onclick="selectBoardSlot(4)"></div>
+      </div>
+      <div class="card-grid" id="board-cards-grid" style="display: none;">
+        <!-- 카드들이 JavaScript로 생성됩니다 -->
+      </div>
+      <div class="selected-cards" id="board-selected-cards">
+        <div style="color: #7f8c8d; display: flex; align-items: center;">보드 카드를 선택해주세요 (선택사항)</div>
+      </div>
+      <button class="clear-btn" onclick="clearSelection('board')">선택 초기화</button>
+    </div>
+
+    <button class="calculate-btn" onclick="calculate()">승률 계산하기</button>
+
+    <div class="result">
+      <h3>📊 계산 결과</h3>
+      <div id="result">여기에 결과가 표시됩니다</div>
+    </div>
+
+    <div class="info">
+      <h4>💡 사용법</h4>
+      <ul>
+        <li><strong>카드 선택:</strong> 카드를 클릭해서 선택하세요. 선택된 카드는 빨간색으로 표시됩니다.</li>
+        <li><strong>플레이어:</strong> 2명~6명까지 지원 (내가 이기려면 모든 상대를 이겨야 함)</li>
+        <li><strong>보드 카드:</strong> 0장=프리플랍, 3장=플랍, 4장=턴, 5장=리버</li>
+        <li><strong>정확도:</strong> 리버/턴/플랍=100% 정확, 프리플랍=고정밀 시뮬레이션</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    let playerCount = 1;
+    let selectedCards = {
+      'my': [],
+      'board': []
+    };
+    
+    // 상대 플레이어들의 선택된 카드
+    for (let i = 1; i <= 6; i++) {
+      selectedCards[`opp-${i}`] = [];
+    }
+
+    // 보드 슬롯 상태 관리
+    let boardSlots = [null, null, null, null, null];
+    let currentBoardSlot = null;
+    
+    // 핸드 슬롯 상태 관리
+    let handSlots = {
+      'my': [null, null]
+    };
+    let currentHandSlot = null;
+    let currentHandPlayer = null;
+
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const suits = ['S', 'H', 'D', 'C'];
+    const suitSymbols = {
+      'S': '♠',
+      'H': '♥', 
+      'D': '♦',
+      'C': '♣'
+    };
+
+    // 보드 슬롯 선택
+    function selectBoardSlot(slotIndex) {
+      if (boardSlots[slotIndex] !== null) {
+        // 이미 카드가 있는 슬롯 클릭 시 카드 제거
+        removeBoardCard(slotIndex);
+        return;
+      }
+      
+      currentBoardSlot = slotIndex;
+      const cardGrid = document.getElementById('board-cards-grid');
+      cardGrid.style.display = 'grid';
+      cardGrid.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 보드 카드 제거
+    function removeBoardCard(slotIndex) {
+      const cardCode = boardSlots[slotIndex];
+      if (cardCode) {
+        selectedCards.board = selectedCards.board.filter(card => card !== cardCode);
+        boardSlots[slotIndex] = null;
+        updateBoardDisplay();
+        updateCardStates();
+      }
+    }
+
+    // 보드 표시 업데이트
+    function updateBoardDisplay() {
+      for (let i = 0; i < 5; i++) {
+        const slot = document.querySelector(`[data-slot="${i}"]`);
+        const cardCode = boardSlots[i];
+        
+        if (cardCode) {
+          slot.className = 'board-slot filled';
+          const rank = cardCode.slice(0, -1);
+          const suit = cardCode.slice(-1);
+          slot.innerHTML = `
+            <div style="font-size: 16px; font-weight: bold;">${rank}</div>
+            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 16px;">${suitSymbols[suit]}</div>
+          `;
+        } else {
+          slot.className = 'board-slot empty';
+          slot.innerHTML = '';
+        }
+      }
+    }
+
+    // 핸드 슬롯 선택
+    function selectHandSlot(player, slotIndex) {
+      if (handSlots[player][slotIndex] !== null) {
+        // 이미 카드가 있는 슬롯 클릭 시 카드 제거
+        removeHandCard(player, slotIndex);
+        return;
+      }
+      
+      currentHandPlayer = player;
+      currentHandSlot = slotIndex;
+      const cardGrid = document.getElementById(`${player}-grid`);
+      cardGrid.style.display = 'grid';
+      cardGrid.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 핸드 카드 제거
+    function removeHandCard(player, slotIndex) {
+      const cardCode = handSlots[player][slotIndex];
+      if (cardCode) {
+        selectedCards[player] = selectedCards[player].filter(card => card !== cardCode);
+        handSlots[player][slotIndex] = null;
+        updateHandDisplay(player);
+        updateCardStates();
+      }
+    }
+
+    // 핸드 표시 업데이트
+    function updateHandDisplay(player) {
+      const layout = document.getElementById(`${player}-hand-layout`);
+      if (!layout) return;
+      
+      for (let i = 0; i < 2; i++) {
+        const slot = layout.querySelector(`[data-slot="${i}"]`);
+        const cardCode = handSlots[player][i];
+        
+        if (cardCode) {
+          slot.className = 'hand-slot filled';
+          const rank = cardCode.slice(0, -1);
+          const suit = cardCode.slice(-1);
+          slot.innerHTML = `
+            <div style="font-size: 18px; font-weight: bold;">${rank}</div>
+            <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}; font-size: 18px;">${suitSymbols[suit]}</div>
+          `;
+        } else {
+          slot.className = 'hand-slot empty';
+          slot.innerHTML = '';
+        }
+      }
+    }
+
+    // 카드 그리드 생성
+    function createCardGrid(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      
+      ranks.forEach(rank => {
+        suits.forEach(suit => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.dataset.rank = rank;
+          card.dataset.suit = suit;
+          card.dataset.card = rank + suit;
+          
+          card.innerHTML = `
+            <div>${rank}</div>
+            <div class="suit-symbols" style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}">${suitSymbols[suit]}</div>
+          `;
+          
+          card.onclick = () => selectCard(containerId, rank + suit);
+          container.appendChild(card);
+        });
+      });
+    }
+
+    // 카드 선택
+    function selectCard(containerId, cardCode) {
+      const maxCards = containerId === 'board-cards-grid' ? 5 : 2;
+      const selectionKey = getSelectionKey(containerId);
+      
+      if (containerId === 'board-cards-grid') {
+        // 보드 카드 선택
+        if (currentBoardSlot === null) {
+          alert('보드 슬롯을 먼저 선택해주세요.');
+          return;
+        }
+        
+        if (isCardUsed(cardCode)) {
+          alert('이미 사용된 카드입니다.');
+          return;
+        }
+        
+        // 보드 슬롯에 카드 추가
+        boardSlots[currentBoardSlot] = cardCode;
+        selectedCards.board.push(cardCode);
+        
+        updateBoardDisplay();
+        updateCardStates();
+        
+        // 카드 그리드 숨기기
+        document.getElementById('board-cards-grid').style.display = 'none';
+        currentBoardSlot = null;
+        
+        return;
+      }
+      
+      // 일반 카드 선택 (내 카드, 상대 카드)
+      if (selectedCards[selectionKey].length >= maxCards) {
+        alert(`최대 ${maxCards}장까지만 선택할 수 있습니다.`);
+        return;
+      }
+      
+      if (isCardUsed(cardCode)) {
+        alert('이미 사용된 카드입니다.');
+        return;
+      }
+      
+      selectedCards[selectionKey].push(cardCode);
+      updateCardDisplay(selectionKey);
+      updateCardStates();
+    }
+
+    // 카드 사용 여부 확인
+    function isCardUsed(cardCode) {
+      for (const key in selectedCards) {
+        if (selectedCards[key].includes(cardCode)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // 선택 키 가져오기
+    function getSelectionKey(containerId) {
+      if (containerId === 'my-cards-grid') return 'my';
+      if (containerId === 'board-cards-grid') return 'board';
+      if (containerId.startsWith('opp-')) return containerId.replace('-grid', '');
+      return 'my';
+    }
+
+    // 카드 표시 업데이트
+    function updateCardDisplay(selectionKey) {
+      const container = document.getElementById(`${selectionKey}-selected-cards`);
+      container.innerHTML = '';
+      
+      if (selectedCards[selectionKey].length === 0) {
+        const placeholder = selectionKey === 'board' ? '보드 카드를 선택해주세요 (선택사항)' : '카드를 선택해주세요';
+        container.innerHTML = `<div style="color: #7f8c8d; display: flex; align-items: center;">${placeholder}</div>`;
+        return;
+      }
+      
+      selectedCards[selectionKey].forEach(cardCode => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'selected-card';
+        const rank = cardCode.slice(0, -1);
+        const suit = cardCode.slice(-1);
+        
+        cardDiv.innerHTML = `
+          <div>${rank}</div>
+          <div style="color: ${suit === 'H' || suit === 'D' ? '#e74c3c' : '#2c3e50'}">${suitSymbols[suit]}</div>
+          <button class="remove-card" onclick="removeCard('${selectionKey}', '${cardCode}')">×</button>
+        `;
+        container.appendChild(cardDiv);
+      });
+    }
+
+    // 카드 제거
+    function removeCard(selectionKey, cardCode) {
+      selectedCards[selectionKey] = selectedCards[selectionKey].filter(card => card !== cardCode);
+      updateCardDisplay(selectionKey);
+      updateCardStates();
+    }
+
+    // 카드 상태 업데이트 (사용된 카드 비활성화)
+    function updateCardStates() {
+      const allCards = document.querySelectorAll('.card');
+      allCards.forEach(card => {
+        const cardCode = card.dataset.card;
+        if (isCardUsed(cardCode)) {
+          card.classList.add('disabled');
+        } else {
+          card.classList.remove('disabled');
+        }
+      });
+    }
+
+    // 선택 초기화
+    function clearSelection(selectionKey) {
+      selectedCards[selectionKey] = [];
+      
+      if (selectionKey === 'board') {
+        // 보드 슬롯 초기화
+        boardSlots = [null, null, null, null, null];
+        updateBoardDisplay();
+        document.getElementById('board-cards-grid').style.display = 'none';
+        currentBoardSlot = null;
+      } else {
+        updateCardDisplay(selectionKey);
+      }
+      
+      updateCardStates();
+    }
+
+    // 상대 플레이어 추가
+    function addPlayer() {
+      if (playerCount < 5) {
+        playerCount++;
+        const container = document.getElementById('opponents-container');
+        const newPlayer = document.createElement('div');
+        newPlayer.className = 'opponent-section';
+        newPlayer.style.marginTop = '20px';
+        newPlayer.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 10px;">상대 ${playerCount} 카드 2장 선택</div>
+          <div class="hand-layout" id="opp-${playerCount}-hand-layout">
+            <div class="hand-slot empty" data-slot="0" onclick="selectHandSlot('opp-${playerCount}', 0)"></div>
+            <div class="hand-slot empty" data-slot="1" onclick="selectHandSlot('opp-${playerCount}', 1)"></div>
+          </div>
+          <div class="card-grid" id="opp-${playerCount}-grid" style="display: none;"></div>
+          <div class="selected-cards" id="opp-${playerCount}-selected-cards">
+            <div style="color: #7f8c8d; display: flex; align-items: center;">카드를 선택해주세요</div>
+          </div>
+          <button class="clear-btn" onclick="clearSelection('opp-${playerCount}')">선택 초기화</button>
+        `;
+        container.appendChild(newPlayer);
+        createCardGrid(`opp-${playerCount}-grid`);
+        
+        document.querySelector('.remove-player-btn').style.display = 'inline-block';
+        if (playerCount === 5) {
+          document.querySelector('.add-player-btn').style.display = 'none';
+        }
+      }
+    }
+
+    // 상대 플레이어 제거
+    function removePlayer() {
+      if (playerCount > 1) {
+        const container = document.getElementById('opponents-container');
+        container.removeChild(container.lastElementChild);
+        selectedCards[`opp-${playerCount}`] = [];
+        playerCount--;
+        
+        document.querySelector('.add-player-btn').style.display = 'inline-block';
+        if (playerCount === 1) {
+          document.querySelector('.remove-player-btn').style.display = 'none';
+        }
+      }
+    }
+
+    // 계산 실행
+    function calculate() {
+      // 입력 검증
+      if (selectedCards.my.length !== 2) {
+        document.getElementById("result").innerHTML = '<span class="error">내 카드를 정확히 2장 선택해주세요.</span>';
+        return;
+      }
+
+      const opponents = [];
+      for (let i = 1; i <= playerCount; i++) {
+        if (selectedCards[`opp-${i}`].length === 2) {
+          opponents.push(selectedCards[`opp-${i}`].join(' '));
+        }
+      }
+
+      if (opponents.length === 0) {
+        document.getElementById("result").innerHTML = '<span class="error">최소 1명의 상대가 필요합니다.</span>';
+        return;
+      }
+
+      // 상황 판단
+      let situation = "";
+      let calculationType = "";
+      
+      if (selectedCards.board.length === 0) {
+        situation = "프리플랍";
+        calculationType = "고정밀 시뮬레이션 (50,000번)";
+      } else if (selectedCards.board.length === 1) {
+        situation = `보드 카드 1장`;
+        calculationType = "정확한 계산";
+      } else if (selectedCards.board.length === 2) {
+        situation = `보드 카드 2장`;
+        calculationType = "정확한 계산";
+      } else if (selectedCards.board.length === 3) {
+        situation = "플랍";
+        calculationType = "정확한 계산";
+      } else if (selectedCards.board.length === 4) {
+        situation = "턴";
+        calculationType = "정확한 계산";
+      } else if (selectedCards.board.length === 5) {
+        situation = "리버";
+        calculationType = "정확한 계산";
+      }
+
+      // 로딩 표시
+      document.getElementById("result").innerHTML = '<span class="success">🔄 정확한 계산 중... 잠시만 기다려주세요.</span>';
+
+      // 백엔드 API 호출
+      fetch('http://localhost:5000/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          my_hand: selectedCards.my.join(' '),
+          opponents: opponents,
+          community: selectedCards.board.join(' ')
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById("result").innerHTML = `<span class="error">오류: ${data.error}</span>`;
+          return;
+        }
+
+        // 결과 표시
+        let opponentsHTML = "";
+        for (let i = 0; i < opponents.length; i++) {
+          opponentsHTML += `상대 ${i + 1} 핸드: ${opponents[i]}<br>`;
+        }
+
+        const resultHTML = `
+          <div class="success">
+            <strong>🎯 ${data.total_players}명 플레이어 - ${situation} 상황 (${calculationType})</strong><br><br>
+            <strong>입력 확인:</strong><br>
+            내 핸드: ${selectedCards.my.join(' ')}<br>
+            ${opponentsHTML}
+            ${selectedCards.board.length > 0 ? `보드: ${selectedCards.board.join(' ')}<br>` : ''}<br>
+            <strong>결과:</strong><br>
+            승률: ${data.win.toFixed(2)}%<br>
+            무승부: ${data.tie.toFixed(2)}%<br>
+            패배: ${data.loss.toFixed(2)}%
+          </div>
+        `;
+
+        document.getElementById("result").innerHTML = resultHTML;
+      })
+      .catch(error => {
+        document.getElementById("result").innerHTML = `
+          <span class="error">
+            서버 연결 오류: ${error.message}<br>
+            Python 백엔드 서버가 실행 중인지 확인해주세요.<br>
+            터미널에서 'py web_server.py' 명령어로 서버를 시작하세요.
+          </span>
+        `;
+      });
+    }
+
+    // 초기화
+    window.onload = function() {
+      createCardGrid('my-cards-grid');
+      createCardGrid('opp-1-grid');
+      createCardGrid('board-cards-grid');
+    };
+  </script>
+</body>
+</html> 

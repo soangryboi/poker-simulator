@@ -1,5 +1,4 @@
-from poker import Card
-from simulate_treys import evaluate_hand, compare_hands
+from poker import Card, evaluate_hand, compare_hands
 
 def test_specific_case():
     my_hand = [Card('A', 'S'), Card('A', 'D')]

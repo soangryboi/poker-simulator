@@ -1,12 +1,21 @@
 from poker import Card
-from simulate_treys import simulate_with_community
+from simulate import simulate_with_community
 
 def parse_card(card_str):
     ranks = "23456789TJQKA"
     suits = "SHDC"
-    if len(card_str) != 2:
-        raise ValueError("카드 형식이 잘못되었습니다. 예: AS")
-    rank, suit = card_str[0].upper(), card_str[1].upper()
+    
+    # 10 카드 처리 (3자리: 10s, 10h, 10d, 10c)
+    if card_str.upper().startswith("10"):
+        if len(card_str) != 3:
+            raise ValueError("10 카드 형식이 잘못되었습니다. 예: 10S")
+        rank, suit = "T", card_str[2].upper()
+    # 일반 카드 처리 (2자리: AS, KD, QH, JC 등)
+    elif len(card_str) == 2:
+        rank, suit = card_str[0].upper(), card_str[1].upper()
+    else:
+        raise ValueError("카드 형식이 잘못되었습니다. 예: AS, 10S")
+    
     if rank not in ranks or suit not in suits:
         raise ValueError("올바른 카드가 아닙니다.")
     return Card(rank, suit)
@@ -16,9 +25,9 @@ def parse_cards(card_strs):
 
 def main():
     try:
-        my_input = input("내 카드 2장 입력 (예: AS KD): ").strip().split()
-        opp_input = input("상대 카드 2장 입력 (예: QC 9H): ").strip().split()
-        comm_input = input("커뮤니티 카드 입력 (0~5장, 예: 3C 7D QH): ").strip().split()
+        my_input = input("내 카드 2장 입력 (예: AS KD 또는 10S QH): ").strip().split()
+        opp_input = input("상대 카드 2장 입력 (예: QC 9H 또는 10D JC): ").strip().split()
+        comm_input = input("커뮤니티 카드 입력 (0~5장, 예: 3C 7D QH 또는 10S 5C): ").strip().split()
 
         if len(my_input) != 2 or len(opp_input) != 2:
             print("카드 2장을 정확히 입력하세요.")

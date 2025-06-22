@@ -2,17 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import logging
 import sys
-from exact_probability import (
-    exact_river_probability, exact_turn_probability, exact_flop_probability,
-    exact_partial_community_probability, exact_preflop_probability,
-    exact_multiplayer_river, exact_multiplayer_turn, exact_multiplayer_partial_community,
-    exact_multiplayer_preflop,
-    exact_multiplayer_river_individual, exact_multiplayer_turn_individual,
-    exact_multiplayer_flop_individual, exact_multiplayer_preflop_individual
-)
-from poker import Card
-import re
-import time
+import os
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -21,8 +11,38 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
+# 현재 디렉토리 확인
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f"Files in current directory: {os.listdir('.')}")
+
+# exact_probability 모듈 import 시도
+try:
+    from exact_probability import (
+        exact_river_probability, exact_turn_probability, exact_flop_probability,
+        exact_partial_community_probability, exact_preflop_probability,
+        exact_multiplayer_river, exact_multiplayer_turn, exact_multiplayer_partial_community,
+        exact_multiplayer_preflop,
+        exact_multiplayer_river_individual, exact_multiplayer_turn_individual,
+        exact_multiplayer_flop_individual, exact_multiplayer_preflop_individual
+    )
+    logger.info("Successfully imported exact_probability module")
+except ImportError as e:
+    logger.error(f"Failed to import exact_probability: {e}")
+    exact_probability = None
+
+# poker 모듈 import 시도
+try:
+    from poker import Card
+    logger.info("Successfully imported poker module")
+except ImportError as e:
+    logger.error(f"Failed to import poker module: {e}")
+    Card = None
+
 def parse_card(card_str):
     """카드 문자열을 Card 객체로 변환"""
+    if Card is None:
+        raise ImportError("poker module is not available")
+    
     card_str = card_str.upper().strip()
     
     # 10 카드 처리
@@ -59,16 +79,13 @@ def calculator():
 @app.route('/calculate', methods=['POST'])
 def calculate_probability():
     try:
-        # 필요한 모듈들을 여기서 import (에러 발생 시 더 명확한 메시지)
-        from exact_probability import (
-            exact_river_probability, exact_turn_probability, exact_flop_probability,
-            exact_partial_community_probability, exact_preflop_probability,
-            exact_multiplayer_river, exact_multiplayer_turn, exact_multiplayer_partial_community,
-            exact_multiplayer_preflop,
-            exact_multiplayer_river_individual, exact_multiplayer_turn_individual,
-            exact_multiplayer_flop_individual, exact_multiplayer_preflop_individual
-        )
-        from poker import Card
+        # 모듈 import 상태 확인
+        if exact_probability is None:
+            return jsonify({'error': 'exact_probability 모듈을 불러올 수 없습니다'}), 500
+        
+        if Card is None:
+            return jsonify({'error': 'poker 모듈을 불러올 수 없습니다'}), 500
+        
         import time
         
         start_time = time.time()
@@ -146,6 +163,22 @@ def calculate_probability():
 @app.route('/test')
 def test():
     return jsonify({'status': 'ok', 'message': 'Server is running'})
+
+@app.route('/diagnose')
+def diagnose():
+    """서버 상태와 모듈 상태를 진단"""
+    import os
+    
+    diagnosis = {
+        'server_status': 'running',
+        'current_directory': os.getcwd(),
+        'files_in_directory': os.listdir('.'),
+        'exact_probability_imported': exact_probability is not None,
+        'poker_imported': Card is not None,
+        'python_version': sys.version
+    }
+    
+    return jsonify(diagnosis)
 
 if __name__ == '__main__':
     app.run(debug=True)

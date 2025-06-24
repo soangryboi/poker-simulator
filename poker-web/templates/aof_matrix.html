@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AOF 핸드 매트릭스</title>
+    <style>
+        table.matrix { border-collapse: collapse; margin: 30px auto; }
+        table.matrix td { width: 44px; height: 44px; text-align: center; border: 1px solid #888; font-size: 15px; }
+        .ev-pos { background: #c8f7c5; color: #222; font-weight: bold; }
+        .ev-neg { background: #f7c5c5; color: #a00; font-weight: bold; }
+        .ev-zero { background: #eee; color: #888; }
+        .stack-select { margin: 20px auto 10px auto; display: block; font-size: 16px; }
+    </style>
+    <script>
+        function changeStack(sel) {
+            window.location.href = '?stack=' + sel.value;
+        }
+    </script>
+</head>
+<body>
+    <h2 style="text-align:center;">All-in or Fold 핸드 차트 (매트릭스)</h2>
+    <form style="text-align:center;">
+        <label for="stack">스택(BB): </label>
+        <select id="stack" name="stack" class="stack-select" onchange="changeStack(this)">
+            {% for s in stack_options %}
+                <option value="{{s}}" {% if s == stack %}selected{% endif %}>{{s}}BB</option>
+            {% endfor %}
+        </select>
+    </form>
+    <table class="matrix">
+        {% for row in matrix %}
+        <tr>
+            {% for cell in row %}
+                <td class="{{ cell.cls }}">{{ cell.ev }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html> 

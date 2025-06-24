@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Push/Fold 핸드 매트릭스</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 20px 10px 30px 10px;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        .desc {
+            text-align: center;
+            color: #555;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        .stack-form {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .stack-input {
+            font-size: 1.1em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            width: 90px;
+            margin-left: 8px;
+        }
+        .nearest-info {
+            text-align: center;
+            color: #888;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+        .matrix-wrap {
+            overflow-x: auto;
+        }
+        table.matrix {
+            border-collapse: collapse;
+            margin: 0 auto;
+            min-width: 520px;
+            background: #fff;
+        }
+        table.matrix td {
+            width: 38px;
+            height: 38px;
+            text-align: center;
+            border: 1px solid #bbb;
+            font-size: 13px;
+            padding: 0;
+            background: #fff;
+        }
+        .cell-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 700px) {
+            .container { max-width: 99vw; padding: 2vw 1vw 4vw 1vw; }
+            table.matrix { min-width: 99vw; font-size: 11px; }
+            table.matrix td { width: 7vw; height: 7vw; font-size: 11px; }
+        }
+    </style>
+    <script>
+        function submitStack(e) {
+            e.preventDefault();
+            const val = document.getElementById('stack').value;
+            window.location.href = '?stack=' + val;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Push/Fold 핸드 차트 (매트릭스)</h2>
+        <div class="desc">스택(BB) 입력 후 엔터 → GTO 기준 푸시/폴드 차트<br>푸시 가능한 핸드만 표시</div>
+        <form class="stack-form" onsubmit="submitStack(event)">
+            <label for="stack">스택(BB):</label>
+            <input id="stack" name="stack" class="stack-input" type="number" min="1" max="200" step="1" value="{{stack}}" required>
+            <button type="submit" style="margin-left:8px; font-size:1em;">적용</button>
+        </form>
+        <div class="nearest-info">GTO 데이터에서 가장 가까운 스택: <b>{{nearest_stack}}BB</b></div>
+        <div class="matrix-wrap">
+            <table class="matrix">
+                {% for row in matrix %}
+                <tr>
+                    {% for cell in row %}
+                        <td>
+                            <div class="cell-content">
+                                <span>{% if cell.cls == 'push' %}{{ cell.val }}{% endif %}</span>
+                            </div>
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html> 

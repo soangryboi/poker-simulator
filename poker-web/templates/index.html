@@ -2,11 +2,217 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>포커 승률 계산기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Calculator Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .tool-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tool-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .tool-description {
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .tool-features li {
+            padding: 5px 0;
+            color: #495057;
+        }
+
+        .tool-features li:before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .highlight .btn {
+            background: white;
+            color: #ee5a24;
+        }
+
+        .info-section {
+            background: #e8f4fd;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            margin-top: 30px;
+        }
+
+        .info-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .info-text {
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>🎯 포커 승률 계산기</h1>
-    <p>포커 승률 계산기에 오신 것을 환영합니다!</p>
-    <a href="/calculator">계산기로 이동</a>
+    <div class="container">
+        <div class="header">
+            <h1>🎰 Poker Calculator Hub</h1>
+            <p>텍사스 홀덤 전략 계산기 모음</p>
+        </div>
+
+        <div class="content">
+            <div class="tools-grid">
+                <div class="tool-card highlight" onclick="window.location.href='/icm_gto'">
+                    <div class="tool-icon">🎯</div>
+                    <h2 class="tool-title">ICM GTO Calculator</h2>
+                    <p class="tool-description">
+                        MyPokerCoaching ICM 전략 기반 헤즈업 전용 계산기
+                    </p>
+                    <ul class="tool-features">
+                        <li>실제 GTO 솔버 기반 차트</li>
+                        <li>ICM 팩터 자동 계산</li>
+                        <li>헤즈업 전용 최적화</li>
+                        <li>자동 팟 사이즈 계산</li>
+                        <li>콜링 레인지 분석</li>
+                    </ul>
+                    <a href="/icm_gto" class="btn">시작하기</a>
+                </div>
+
+                <div class="tool-card" onclick="window.location.href='/poker_calculator'">
+                    <div class="tool-icon">🎲</div>
+                    <h2 class="tool-title">Basic Poker Calculator</h2>
+                    <p class="tool-description">
+                        기본적인 포커 확률 및 EV 계산기
+                    </p>
+                    <ul class="tool-features">
+                        <li>핸드 확률 계산</li>
+                        <li>기본 EV 분석</li>
+                        <li>간단한 인터페이스</li>
+                        <li>빠른 계산</li>
+                    </ul>
+                    <a href="/poker_calculator" class="btn">시작하기</a>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3 class="info-title">ℹ️ 사용 가이드</h3>
+                <div class="info-text">
+                    <p><strong>ICM GTO Calculator (추천):</strong> MyPokerCoaching의 ICM 전략을 기반으로 한 헤즈업 전용 계산기입니다. 
+                    실제 GTO 솔버 차트를 사용하며, 팟 사이즈가 자동으로 계산됩니다 (내가 올인하면 내 스택의 2배). 
+                    상대가 올인했을 때의 콜링 레인지도 제공합니다. SB vs BB 헤즈업 상황에 최적화되어 있습니다.</p>
+                    
+                    <p><strong>Basic Poker Calculator:</strong> 기본적인 포커 확률 및 EV 계산기입니다. 간단한 핸드 분석에 사용할 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

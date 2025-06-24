@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>All-in or Fold 핸드 차트</title>
+    <style>
+        table.poker-chart { border-collapse: collapse; margin: 20px auto; }
+        table.poker-chart th, table.poker-chart td { border: 1px solid #888; padding: 6px 10px; text-align: center; }
+        table.poker-chart th { background: #222; color: #fff; }
+        table.poker-chart tr:nth-child(even) { background: #f6f6f6; }
+        .O { background: #c8f7c5; font-weight: bold; }
+        .X { background: #f7c5c5; color: #a00; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">All-in or Fold 핸드 차트 (헤즈업, GTO 콜 기준)</h2>
+    <div style="width:90%;margin:auto;">
+        {{ table|safe }}
+    </div>
+</body>
+</html> 
